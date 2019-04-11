@@ -46,6 +46,7 @@ typeLiters %>% print(n=Inf)
 ```
 
 #Part 4.
+#After looking at the plot of volume sold by day in 2018 it seems that most alcohol is sold on friday or during the weekend. The biggest month for alcohol sales seems to be July. It also appears that some of the football home games aligned with a few of the higher points. One problem with using this set seems to be that the month of September and most of October have missing data. Those two months are prime time football season which makes conclusions on the subject difficult to make.
 ```{r}
 head(cleanAlco)
 #Summarizing sales in Ames during 2018.
