@@ -1,0 +1,59 @@
+---
+title: "ds202 Homework 5"
+author: "Connor Hergenreter"
+date: "April 4, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Part 1. Setting up the Data.
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+if (file.exists("alcohol.rds")) {
+  data <- readRDS("alcohol.rds")
+} else {
+  url <- "https://xdaiisu.github.io/ds202materials/data/ames.csv"
+  data <- readr::read_csv(url)
+  saveRDS(data, file="alcohol.rds")
+} 
+```
+
+#Part 2. Data cleaning.
+```{r}
+#Creating latitude and longitude columns using store location.
+cleanAlco <- data %>% separate(`Store Location`, c("Latitude","Longitude"), sep=",\\s") %>% separate(Latitude, c("drop1","Latitude"), sep="\\(") %>% separate(Longitude, c("Longitude","drop2"), sep="\\)") %>% select(-drop1,drop2)
+
+#Changing variables types. Latitude and longitude to numeric. Store name, Category Name, vendor number, and vendor name to factor.
+cleanAlco <- cleanAlco %>% mutate(Latitude = as.numeric(Latitude), Longitude = as.numeric(Longitude), `Store Name` = as.factor(`Store Name`), `Category Name` = as.factor(`Category Name`), `Vendor Number` = as.factor(`Vendor Number`), `Vendor Name` = as.factor(`Vendor Name`))
+
+#Separating the date column into a day, month, and year column.
+cleanAlco <- cleanAlco %>% separate(Date, c("Month", "Day", "Year"), sep="/") %>% mutate(Day = as.numeric(Day), Month = as.numeric(Month), Year = as.numeric(Year))
+```
+
+#Part 3. First Overview.
+```{r}
+#Scatterplot of Longitude by Latitude.
+ggplot(cleanAlco, aes(x=Latitude, y=Longitude)) + geom_point() + labs(title="Latitude and Longitude of Store Locations")
+
+#Tibble containing total sold per alcohol type.
+typeLiters <- cleanAlco %>% group_by(`Category Name`) %>% summarize(`Volume Sold in liters` = sum(`Volume Sold (Liters)`))
+typeLiters %>% print(n=Inf)
+```
+
+#Part 4.
+```{r}
+head(cleanAlco)
+#Summarizing sales in Ames during 2018.
+amesAlco <- cleanAlco %>% group_by('City') %>% filter(City=="Ames" & Year==2018) %>% summarize(`Number of Sales` = n(), `Volume of Liquor Sold (Liters)` = sum(`Volume Sold (Liters)`), `Money Spent` = sum(`Sale (Dollars)`))
+amesAlco %>% print(n=Inf)
+
+#Plotting Volume sold by day in Ames during 2018.
+amesAlcoPlot <- cleanAlco %>% group_by(Day, Month) %>% filter(City=="Ames" & Year==2018) %>% mutate(`Volume Sold Per Day (Liters)` = sum(`Volume Sold (Liters)`))
+head(amesAlcoPlot)
+ggplot(amesAlcoPlot, aes(x=Day, y=`Volume Sold Per Day (Liters)`)) + geom_point() + facet_wrap(~Month) + labs(title="Volume of Alcohol sold in Ames by Day and Month in 2018")
+```
